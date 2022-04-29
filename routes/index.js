@@ -3,6 +3,7 @@ const express = require('express')
 const router = express.Router()
 const needle = require('needle')
 const apicache = require('apicache')
+const { stat } = require('fs')
 
 // Env vars
 const API_BASE_URL = process.env.API_BASE_URL
@@ -21,14 +22,18 @@ router.get('/', cache('2 minutes'), async (req, res, next) => {
 
     const apiRes = await needle('get', `${API_BASE_URL}?${params}&units=${params}`)
     const data = apiRes.body
-
     // Log the request to the public API
     if (process.env.NODE_ENV !== 'production') {
       console.log(`REQUEST: ${API_BASE_URL}?${params}&units=${params}`)
     }
-
-    res.status(200).json(data)
+    console.log(data["cod"])
+    if (data["code"] == 200){
+      res.status(200).json(data)
+    } else if (data["cod"] == 404) {
+      res.status(404).send("City Not Found")
+    }
   } catch (error) {
+    console.log(error)
     next(error)
   }
 })
