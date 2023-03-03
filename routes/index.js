@@ -20,14 +20,17 @@ router.get('/', cache('2 minutes'), async (req, res, next) => {
       ...url.parse(req.url, true).query,
     })
 
-    const apiRes = await needle('get', `${API_BASE_URL}?${params}&units=${params}`)
+    const units = params.get('units') // Default to metric if units parameter is not provided
+    params.delete('units') // Remove the units parameter from the query string
+
+    const apiRes = await needle('get', `${API_BASE_URL}?${params.toString()}&units=${units}`)
     const data = apiRes.body
     // Log the request to the public API
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`REQUEST: ${API_BASE_URL}?${params}&units=${params}`)
+      console.log(`REQUEST: ${API_BASE_URL}?${params.toString()}&units=${units}`)
     }
     console.log(data["cod"])
-    if (data["code"] == 200){
+    if (data["cod"] == 200){
       res.status(200).json(data)
     } else if (data["cod"] == 404) {
       res.status(404).send("City Not Found")
